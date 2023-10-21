@@ -78,30 +78,34 @@ public:
 
 	Bacteria(char* filename)
 	{
-		FILE* bacteria_file;
-		errno_t OK = fopen_s(&bacteria_file, filename, "r");
-
-		if (OK != 0)
+		#pragma omp critical
 		{
-			fprintf(stderr, "Error: failed to open file %s\n", filename);
-			exit(1);
-		}
+			FILE* bacteria_file;
+			errno_t OK = fopen_s(&bacteria_file, filename, "r");
 
-		InitVectors();
-
-		char ch;
-		while ((ch = fgetc(bacteria_file)) != EOF)
-		{
-			if (ch == '>')
+			if (OK != 0)
 			{
-				while (fgetc(bacteria_file) != '\n'); // skip rest of line
-
-				char buffer[LEN-1];
-				fread(buffer, sizeof(char), LEN-1, bacteria_file);
-				init_buffer(buffer);
+				fprintf(stderr, "Error: failed to open file %s\n", filename);
+				exit(1);
 			}
-			else if (ch != '\n')
-				cont_buffer(ch);
+
+			InitVectors();
+
+			char ch;
+			while ((ch = fgetc(bacteria_file)) != EOF)
+			{
+				if (ch == '>')
+				{
+					while (fgetc(bacteria_file) != '\n'); // skip rest of line
+
+					char buffer[LEN-1];
+					fread(buffer, sizeof(char), LEN-1, bacteria_file);
+					init_buffer(buffer);
+				}
+				else if (ch != '\n')
+					cont_buffer(ch);
+			}
+			fclose(bacteria_file);
 		}
 
 		long total_plus_complement = total + complement;
@@ -173,8 +177,6 @@ public:
 			}
 		}
 		delete t;
-
-		fclose (bacteria_file);
 	}
 };
 
@@ -253,14 +255,14 @@ double CompareBacteria(Bacteria* b1, Bacteria* b2)
 void CompareAllBacteria()
 {
 	Bacteria** b = new Bacteria*[number_bacteria];
-	#pragma omp parallel for
+	#pragma omp parallel for schedule(dynamic)
     for(int i=0; i<number_bacteria; i++)
 	{
 		printf("load %d of %d\n", i+1, number_bacteria);
 		b[i] = new Bacteria(bacteria_name[i]);
 	}
 
-	#pragma omp parallel for collapse(2)
+	#pragma omp parallel for collapse(2) schedule(dynamic)
     for(int i=0; i<number_bacteria-1; i++)
 		for(int j=i+1; j<number_bacteria; j++)
 		{
