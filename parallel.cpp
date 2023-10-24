@@ -1,4 +1,5 @@
 #include <math.h>
+#include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -211,12 +212,10 @@ double CompareBacteria(Bacteria *b1, Bacteria *b2) {
     }
   }
   while (p1 < b1->count) {
-    long n1 = b1->ti[p1];
     double t1 = b1->tv[p1++];
     vector_len1 += (t1 * t1);
   }
   while (p2 < b2->count) {
-    long n2 = b2->ti[p2];
     double t2 = b2->tv[p2++];
     vector_len2 += (t2 * t2);
   }
@@ -227,29 +226,29 @@ double CompareBacteria(Bacteria *b1, Bacteria *b2) {
 void CompareAllBacteria() {
   Bacteria **b = new Bacteria *[number_bacteria];
 
-  #pragma omp parallel for
+  #pragma omp parallel for schedule(dynamic)
   for (int i = 0; i < number_bacteria; i++) {
     printf("load %d of %d\n", i + 1, number_bacteria);
     b[i] = new Bacteria(bacteria_name[i]);
   }
 
-  #pragma omp parallel for collapse(2)
+  #pragma omp parallel for collapse(2) schedule(dynamic)
   for (int i = 0; i < number_bacteria - 1; i++)
     for (int j = i + 1; j < number_bacteria; j++) {
-      printf("%2d %2d -> ", i, j);
       double correlation = CompareBacteria(b[i], b[j]);
-      printf("%.20lf\n", correlation);
+      printf("%2d %2d -> %.20lf\n", i, j, correlation);
     }
 }
 
 int main(int argc, char *argv[]) {
-  time_t t1 = time(NULL);
+  double t1, t2;
+  t1 = omp_get_wtime();
 
   Init();
   ReadInputFile("list.txt");
   CompareAllBacteria();
 
-  time_t t2 = time(NULL);
-  printf("time elapsed: %ld seconds\n", t2 - t1);
+  t2 = omp_get_wtime();
+  printf("time elapsed: %f seconds\n", t2 - t1);
   return 0;
 }

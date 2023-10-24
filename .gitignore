@@ -1,6 +1,18 @@
 # VSCode
 .vscode
 
+# Visual Studio
+.vs
+
 # Build
 *.out
 *.o
+x64
+
+# Intel
+DawnCache
+GPUCache
+Intel*
+
+# Logs
+/*.log
