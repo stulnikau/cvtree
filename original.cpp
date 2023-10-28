@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <omp.h> // used for high resolution clock
 
 int number_bacteria;
 char **bacteria_name;
@@ -237,13 +238,15 @@ void CompareAllBacteria() {
 }
 
 int main(int argc, char *argv[]) {
-  time_t t1 = time(NULL);
+  double t1, t2;
+  t1 = omp_get_wtime();
 
   Init();
   ReadInputFile("list.txt");
   CompareAllBacteria();
 
-  time_t t2 = time(NULL);
-  printf("time elapsed: %ld seconds\n", t2 - t1);
+  t2 = omp_get_wtime();
+  printf("time elapsed: %f seconds\n", t2 - t1);
+
   return 0;
 }
