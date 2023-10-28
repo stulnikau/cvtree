@@ -241,6 +241,8 @@ void CompareAllBacteria() {
 }
 
 int main(int argc, char *argv[]) {
+  omp_set_num_threads(8);
+
   double t1, t2;
   t1 = omp_get_wtime();
 
